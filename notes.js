@@ -33,8 +33,11 @@ module.exports = async (req, res) => {
         updated: Number(n.updated) || Date.now(),
         deleted: !!n.deleted,
         pinned: !!n.pinned,
+        extra: n.extra && typeof n.extra === 'object'
+          ? { page: String(n.extra.page || 'free').slice(0, 12), items: Array.isArray(n.extra.items) ? n.extra.items.slice(0, 2000) : [] }
+          : undefined,
       };
-      if (note.html.length > MAX_NOTE_CHARS) return res.status(413).json({ error: 'note_too_large' });
+      if (note.html.length > MAX_NOTE_CHARS || JSON.stringify(note.extra || {}).length > 600000) return res.status(413).json({ error: 'note_too_large' });
       if (!(await redis.hexists(ns, note.id)) && (await redis.hlen(ns)) >= MAX_NOTES)
         return res.status(429).json({ error: 'too_many_notes' });
       await redis.hset(ns, { [note.id]: note });
