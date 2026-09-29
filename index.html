@@ -4,97 +4,117 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Notepad</title>
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#3b5bdb">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <script>document.documentElement.dataset.theme=localStorage.getItem('np.theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')</script>
 <style>
-:root{--bg:#eef1f4;--panel:#fff;--tx:#16202a;--mut:#64707d;--bd:#dde2e8;--ac:#0f766e;--acs:#dff3f0}
-:root[data-theme=dark]{--bg:#0d1216;--panel:#151c22;--tx:#e6ebf0;--mut:#8a97a4;--bd:#25303a;--ac:#5eead4;--acs:#173a38}
+:root{--bg:#f4f5f7;--panel:#fff;--tx:#14171f;--mut:#6b7280;--bd:#e4e6eb;--ac:#3b5bdb;--acs:#edf0ff;--sh:0 1px 2px rgba(16,24,40,.05),0 10px 30px rgba(16,24,40,.06)}
+:root[data-theme=dark]{--bg:#0a0b0e;--panel:#121419;--tx:#e9ebf0;--mut:#8b93a1;--bd:#22252d;--ac:#8aa4ff;--acs:#1a2038;--sh:0 1px 2px #0006,0 10px 30px #0006}
 *{box-sizing:border-box}html,body{height:100%;margin:0}
-body{display:flex;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);padding-top:env(safe-area-inset-top,0)}
-button,input{font:inherit;color:inherit}
-button{background:none;border:1px solid var(--bd);border-radius:8px;padding:6px 11px;cursor:pointer}
-button:hover{background:var(--acs)}button.p{background:var(--ac);border-color:var(--ac);color:var(--panel);font-weight:600}
-:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-aside{width:290px;background:var(--panel);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px;gap:10px;flex:none}
-aside h1{font-size:18px;margin:0}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
-#q,#title,#k{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:8px;padding:8px 10px}
+body{display:flex;font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx);padding-top:env(safe-area-inset-top,0);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button,.clr,select{background:none;border:0;border-radius:8px;min-height:32px;padding:0 10px;cursor:pointer;white-space:nowrap}
+button:hover,.clr:hover,select:hover{background:var(--acs)}button.on{background:var(--acs);color:var(--ac)}
+button.p{background:var(--ac);color:var(--panel);font-weight:600}button.p:hover{filter:brightness(1.08)}
+button.o{border:1px solid var(--bd)}select{padding:0 6px;color:var(--tx)}select option{background:var(--panel)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+aside{width:272px;background:var(--panel);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:16px 12px;gap:10px;flex:none}
+aside h1{font-size:16px;margin:0 4px;font-weight:600;letter-spacing:-.01em;flex:1}.row{display:flex;gap:8px;align-items:center}.row>.g{flex:1}
+#q,#k,.fi{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:8px;padding:7px 10px;min-height:34px}
 #list{list-style:none;margin:0;padding:0;overflow:auto;flex:1}
-#list li{padding:9px 10px;border-radius:8px;cursor:pointer;border-left:3px solid transparent}
-#list li:hover{background:var(--bg)}#list li.on{background:var(--acs);border-left-color:var(--ac)}
-#list b,#list small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#list small,.mut{color:var(--mut)}
-main{flex:1;display:flex;flex-direction:column;min-width:0;padding:14px;gap:10px}
-#title{font-size:20px;font-weight:650;background:var(--panel)}
-.bar{display:flex;flex-wrap:wrap;gap:6px}
-#ed{flex:1;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:22px clamp(16px,5vw,56px);font:17px/1.75 "Iowan Old Style",Georgia,serif;outline:none;word-wrap:break-word}
-#ed:empty:before{content:"Start typing, or paste anything here. Formatting is kept exactly as copied.";color:var(--mut)}
-#ed img{max-width:100%}#ed table{border-collapse:collapse}#ed td,#ed th{border:1px solid var(--bd);padding:4px 8px}
-footer{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+#list li{padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:2px}#list li:hover{background:var(--bg)}#list li.on{background:var(--acs)}
+#list b,#list small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}#list small{font-weight:400}#list small,.mut{color:var(--mut)}
+main{flex:1;display:flex;flex-direction:column;min-width:0;padding:16px 20px 10px;gap:10px}
+#title{flex:1;min-width:0;border:0;background:none;font:600 24px/1.3 Inter,system-ui,sans-serif;letter-spacing:-.02em;padding:2px 0;outline:none;color:var(--tx)}
+.bar{display:flex;gap:2px;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:5px;box-shadow:var(--sh);overflow-x:auto;scrollbar-width:none}
+.sep{width:1px;height:20px;background:var(--bd);margin:0 5px;flex:none}.sp{flex:1}
+.clr{position:relative;display:inline-flex;align-items:center;font-weight:600}.clr input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+#find{display:none;gap:6px;align-items:center;flex-wrap:wrap}#find.on{display:flex}#find .fi{width:170px}
+#wrap{flex:1;overflow:auto;border-radius:14px}
+#ed{max-width:880px;min-height:100%;margin:0 auto;background:var(--panel);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:40px clamp(18px,6vw,64px);font:16px/1.75 Inter,system-ui,sans-serif;outline:none;overflow-wrap:anywhere}
+#ed:empty:before{content:"Type here, or paste from anywhere. Formatting is kept exactly as copied.";color:var(--mut)}
+#ed img{max-width:100%;height:auto}#ed table{border-collapse:collapse}#ed td,#ed th{border:1px solid var(--bd);padding:4px 8px}
+#ed blockquote{margin:1em 0;padding-left:16px;border-left:3px solid var(--ac);color:var(--mut)}#ed pre{background:var(--bg);padding:12px;border-radius:8px;overflow:auto}
+#ed h1,#ed h2,#ed h3{line-height:1.3;letter-spacing:-.02em}#ed a{color:var(--ac)}
+footer{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;flex-wrap:wrap}
 #empty{margin:auto;text-align:center}
-dialog{background:var(--panel);color:var(--tx);border:1px solid var(--bd);border-radius:12px;max-width:440px;width:92%}dialog::backdrop{background:#0008}
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--panel);padding:8px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s}#toast.on{opacity:1}
-#menu{display:none}
-@media(max-width:760px){aside{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%);transition:transform .2s;width:84%;max-width:320px;padding-top:calc(14px + env(safe-area-inset-top,0))}aside.open{transform:none}#menu{display:inline-block}}
+dialog{background:var(--panel);color:var(--tx);border:1px solid var(--bd);border-radius:14px;max-width:440px;width:92%;box-shadow:var(--sh)}dialog::backdrop{background:#0008}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--panel);padding:8px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}#toast.on{opacity:1}
+#menu{display:none}body.focus aside,body.focus .bar,body.focus #find,body.focus footer .hd{display:none!important}body.focus main{padding-top:28px}
+@media(max-width:760px){aside{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%);transition:transform .2s;width:84%;max-width:320px}aside.open{transform:none;box-shadow:var(--sh)}#menu{display:inline-block}main{padding:12px}}
+@media print{aside,.bar,#find,footer,#menu,.np{display:none!important}body{display:block;background:#fff}#ed{border:0;box-shadow:none;max-width:none;padding:0;zoom:1!important}#wrap{overflow:visible}main{padding:0}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <aside id="side">
   <div class="row"><h1>Notepad</h1><button id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button></div>
-  <div class="row"><button class="p" id="new">+ New note</button><button id="open" title="Open a .txt/.md/.html file">Open file</button></div>
+  <button class="p" id="new">+ New note</button>
   <input id="q" type="search" placeholder="Search notes" aria-label="Search notes">
   <ul id="list"></ul>
-  <button id="sync">Sync: off</button>
-  <input id="file" type="file" accept=".txt,.md,.html,.htm,text/*" hidden>
+  <div class="row"><button class="o g" id="sync">Sync: off</button><button class="o g" id="open" title="Import .txt, .md, .html or a backup .json">Import</button></div>
+  <div class="row"><button class="o g" id="bak">Backup all</button></div>
+  <input id="file" type="file" accept=".txt,.md,.html,.htm,.json,text/*" hidden>
 </aside>
 <main>
-  <div class="row"><button id="menu" style="flex:none" aria-label="Notes">☰</button><input id="title" placeholder="Untitled" aria-label="Note title"></div>
-  <div class="bar" id="bar">
-    <button data-c="bold"><b>B</b></button><button data-c="italic"><i>I</i></button><button data-c="underline"><u>U</u></button>
-    <button data-c="insertUnorderedList">• List</button><button data-c="undo">Undo</button><button data-c="redo">Redo</button>
-    <button id="paste">Paste</button><button id="copy">Copy all</button>
-    <button id="dtxt" class="p">Download .txt</button><button id="dhtml">Download .html</button><button id="del">Delete</button>
+  <div class="row np"><button id="menu" aria-label="Notes">☰</button><input id="title" placeholder="Untitled note" aria-label="Note title"><button class="o" id="dhtml">.html</button><button class="p" id="dtxt">Download .txt</button></div>
+  <div class="bar" id="bar" role="toolbar" aria-label="Formatting">
+    <select id="blk" aria-label="Block style"><option value="">Style</option><option value="<p>">Paragraph</option><option value="<h1>">Heading 1</option><option value="<h2>">Heading 2</option><option value="<h3>">Heading 3</option><option value="<blockquote>">Quote</option><option value="<pre>">Code</option></select>
+    <select id="fnt" aria-label="Editor font"><option value="sans">Sans</option><option value="serif">Serif</option><option value="mono">Mono</option></select><span class="sep"></span>
+    <button data-c="bold" title="Bold (Ctrl+B)"><b>B</b></button><button data-c="italic" title="Italic"><i>I</i></button><button data-c="underline" title="Underline"><u>U</u></button><button data-c="strikeThrough" title="Strikethrough"><s>S</s></button>
+    <label class="clr" title="Text color">A<input type="color" id="fc" value="#d6336c"></label><label class="clr" title="Highlight">▮<input type="color" id="hc" value="#ffe066"></label><span class="sep"></span>
+    <button data-c="insertUnorderedList" title="Bullet list">•</button><button data-c="insertOrderedList" title="Numbered list">1.</button>
+    <button data-c="justifyLeft" title="Align left">⇤</button><button data-c="justifyCenter" title="Center">⇔</button><button data-c="justifyRight" title="Align right">⇥</button>
+    <button id="lnk" title="Link">Link</button><button data-c="removeFormat" title="Clear formatting">Clear</button><span class="sep"></span>
+    <button data-c="undo" title="Undo">↶</button><button data-c="redo" title="Redo">↷</button><span class="sep"></span>
+    <button id="pm" title="Choose how pasted text behaves (Shift+Ctrl+V flips it once)">Paste: as is</button><button id="paste">Paste</button><button id="copy">Copy</button><button id="cpt">Copy plain</button><span class="sp"></span>
+    <button id="fbtn">Find</button><button id="pin">Pin</button><button id="foc">Focus</button><button id="prt">Print</button><button id="del">Delete</button>
   </div>
-  <div id="ed" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Note"></div>
+  <div id="find" class="bar"><input class="fi" id="fi" placeholder="Find" aria-label="Find"><input class="fi" id="ri" placeholder="Replace with" aria-label="Replace"><button id="fn">Next</button><button id="fr">Replace</button><button id="fa">Replace all</button><button id="fx">Close</button></div>
+  <div id="wrap"><div id="ed" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Note"></div></div>
   <div id="empty" hidden><p class="mut">No notes yet.</p><button class="p" id="new2">Create your first note</button></div>
-  <footer><span id="st" class="mut" role="status"></span><span id="wc" class="mut"></span></footer>
+  <footer><span id="st" class="mut" role="status"></span><span class="mut" id="wc"></span>
+    <span class="row np" style="gap:0"><button id="zo" title="Zoom out (Ctrl -)">−</button><button id="zv" title="Reset zoom (Ctrl 0)" style="min-width:52px">100%</button><button id="zi" title="Zoom in (Ctrl +)">+</button></span></footer>
 </main>
 <dialog id="dlg">
   <h3 style="margin-top:0">Cloud sync</h3>
-  <p class="mut">Notes are always saved in this browser. To keep them on other devices, use the same sync key there. Anyone with the key can read your notes, so keep it private.</p>
+  <p class="mut">Notes are always saved in this browser. Use the same sync key on another device to see them there. Anyone with the key can read your notes, so keep it private.</p>
   <input id="k" placeholder="Sync key (16+ characters)" autocomplete="off" spellcheck="false">
-  <div class="row" style="margin-top:12px"><button id="gen">Generate</button><button class="p" id="ksave">Save &amp; sync</button><button id="koff">Turn off</button></div>
-  <p class="mut" style="margin-bottom:0"><button id="kclose" style="border:0;padding:0;text-decoration:underline">Close</button></p>
+  <div class="row" style="margin-top:12px"><button class="o g" id="gen">Generate</button><button class="p g" id="ksave">Save &amp; sync</button><button class="o g" id="koff">Turn off</button></div>
+  <p style="margin-bottom:0"><button id="kclose">Close</button></p>
 </dialog>
 <div id="toast"></div>
 <script>
 const $=id=>document.getElementById(id),L=localStorage,ed=$('ed');
 const get=(k,d)=>{try{return JSON.parse(L.getItem(k))??d}catch{return d}};
-let notes=get('np.notes',[]),active=L.getItem('np.active'),key=L.getItem('np.key')||'',q='',dirty=new Set(),t1,t2;
+let notes=get('np.notes',[]),active=L.getItem('np.active'),key=L.getItem('np.key')||'',q='',dirty=new Set(),t1,t2,rng,pm=L.getItem('np.paste')||'keep',zoom=+(L.getItem('np.zoom')||1);
 const uid=()=>crypto.randomUUID().replace(/-/g,'').slice(0,16);
-const cur=()=>notes.find(n=>n.id===active&&!n.deleted);
-const live=()=>notes.filter(n=>!n.deleted);
+const cur=()=>notes.find(n=>n.id===active&&!n.deleted),live=()=>notes.filter(n=>!n.deleted);
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)};
-const status=m=>$('st').textContent=m;
+const status=m=>$('st').textContent=m,esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const txt=h=>{const d=document.createElement('div');d.innerHTML=h;return d.innerText||d.textContent||''};
 
-// Sanitizer: strips scripts, event handlers and javascript: links from pasted/loaded HTML.
+// Sanitizer: removes scripts, event handlers and javascript: links; keeps all visual formatting.
 function clean(html){const d=new DOMParser().parseFromString(html,'text/html');
   d.querySelectorAll('script,style,iframe,object,embed,link,meta,form,base').forEach(e=>e.remove());
   d.body.querySelectorAll('*').forEach(e=>[...e.attributes].forEach(a=>{
     if(/^on/i.test(a.name)||(/^(href|src|xlink:href|action)$/i.test(a.name)&&/^\s*javascript:/i.test(a.value)))e.removeAttribute(a.name)}));
   return d.body.innerHTML}
+// Plain text -> HTML that keeps line breaks, tabs and repeated spaces exactly.
+const plainHtml=t=>esc(t.replace(/\r\n?/g,'\n')).replace(/\t/g,'    ').replace(/^ +| {2,}/gm,m=>'&nbsp;'.repeat(m.length)).replace(/\n/g,'<br>');
+const put=(h,t)=>document.execCommand('insertHTML',false,(pm==='keep'&&h)?clean(h):plainHtml(t||txt(h||'')));
 
 function saveLocal(){try{L.setItem('np.notes',JSON.stringify(notes))}catch{toast('Browser storage is full. Download your notes.')}}
 function list(){const ul=$('list');ul.textContent='';
-  live().filter(n=>!q||(n.title+' '+txt(n.html)).toLowerCase().includes(q)).sort((a,b)=>b.updated-a.updated).forEach(n=>{
-    const li=document.createElement('li'),b=document.createElement('b'),s=document.createElement('small');
-    b.textContent=n.title||'Untitled';s.textContent=(txt(n.html).trim().slice(0,60))||'Empty note';
+  live().filter(n=>!q||(n.title+' '+txt(n.html)).toLowerCase().includes(q)).sort((a,b)=>(!!b.pinned-!!a.pinned)||b.updated-a.updated).forEach(n=>{
+    const li=document.createElement('li'),b=document.createElement('b'),s=document.createElement('small'),t=txt(n.html).trim();
+    b.textContent=(n.pinned?'📌 ':'')+(n.title||t.split('\n')[0].slice(0,50)||'Untitled');s.textContent=t.slice(0,70)||'Empty note';
     li.append(b,s);li.className=n.id===active?'on':'';li.onclick=()=>{open(n.id);$('side').classList.remove('open')};ul.append(li)});
-  const none=!live().length;$('empty').hidden=!none;['title','bar','ed'].forEach(i=>$(i).style.display=none?'none':'')}
-function count(){const t=ed.innerText.trim();$('wc').textContent=(t?t.split(/\s+/).length:0)+' words · '+t.length+' characters'}
-function open(id){flush();active=id;L.setItem('np.active',id);const n=cur();if(!n)return;
-  $('title').value=n.title;ed.innerHTML=clean(n.html);count();list()}
+  const none=!live().length;$('empty').hidden=!none;['bar','wrap'].forEach(i=>$(i).style.display=none?'none':'');$('pin').classList.toggle('on',!!cur()?.pinned)}
+function count(){const t=ed.innerText.trim(),w=t?t.split(/\s+/).length:0,n=cur();
+  $('wc').textContent=w+' words · '+t.length+' characters · '+Math.max(1,Math.round(w/220))+' min read'+(n?' · edited '+new Date(n.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')}
+function open(id){flush();active=id;L.setItem('np.active',id);const n=cur();if(!n)return;$('title').value=n.title;ed.innerHTML=clean(n.html);count();list()}
 function add(title='',html=''){const n={id:uid(),title,html,updated:Date.now()};notes.unshift(n);dirty.add(n.id);open(n.id);flush();$('title').focus()}
 function changed(){const n=cur();if(!n)return;n.title=$('title').value;n.html=ed.innerHTML;n.updated=Date.now();dirty.add(n.id);count();
   status(key?'Saving…':'Saved in this browser');clearTimeout(t1);t1=setTimeout(()=>{saveLocal();list()},300);clearTimeout(t2);t2=setTimeout(pushDirty,1500)}
@@ -113,34 +133,76 @@ async function pull(){if(!key)return;status('Syncing…');
   catch(e){status(e.message==='storage_not_configured'?'Sync unavailable: storage not set up on server':e.message==='invalid_sync_key'?'Invalid sync key':'Offline. Notes are saved in this browser.')}}
 const syncLabel=()=>$('sync').textContent=key?'Sync: on':'Sync: off';
 
-// Downloads / clipboard
+// Downloads, copy, paste
 function download(ext){const n=cur();if(!n)return;const name=(n.title||'note').replace(/[\\/:*?"<>|]+/g,'').trim()||'note';
-  const body=ext==='txt'?ed.innerText:'<!doctype html><meta charset="utf-8"><title>'+name.replace(/[&<]/g,'')+'</title><body>'+ed.innerHTML;
+  const body=ext==='txt'?ed.innerText:'<!doctype html><meta charset="utf-8"><title>'+esc(name)+'</title><body>'+ed.innerHTML;
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:ext==='txt'?'text/plain':'text/html'}));a.download=name+'.'+ext;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Downloaded '+name+'.'+ext)}
 $('dtxt').onclick=()=>download('txt');$('dhtml').onclick=()=>download('html');
-$('copy').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([ed.innerHTML],{type:'text/html'}),'text/plain':new Blob([ed.innerText],{type:'text/plain'})})])}catch{try{await navigator.clipboard.writeText(ed.innerText)}catch{return toast('Copy blocked by the browser')}}toast('Copied')};
-$('paste').onclick=async()=>{ed.focus();try{for(const i of await navigator.clipboard.read()){if(i.types.includes('text/html')){document.execCommand('insertHTML',false,clean(await(await i.getType('text/html')).text()));return}}
-  document.execCommand('insertText',false,await navigator.clipboard.readText())}catch{toast('Clipboard access denied. Press Ctrl+V instead.')}};
-ed.addEventListener('paste',e=>{const h=e.clipboardData.getData('text/html');if(h&&!e.shiftKey){e.preventDefault();document.execCommand('insertHTML',false,clean(h))}}); // Ctrl+Shift+V = plain text
-$('bar').onclick=e=>{const c=e.target.closest('[data-c]');if(c){ed.focus();document.execCommand(c.dataset.c)}};
+$('copy').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([ed.innerHTML],{type:'text/html'}),'text/plain':new Blob([ed.innerText],{type:'text/plain'})})])}catch{try{await navigator.clipboard.writeText(ed.innerText)}catch{return toast('Copy blocked by the browser')}}toast('Copied with formatting')};
+$('cpt').onclick=async()=>{try{await navigator.clipboard.writeText(ed.innerText);toast('Copied as plain text')}catch{toast('Copy blocked by the browser')}};
+$('paste').onclick=async()=>{ed.focus();try{let h='';for(const i of await navigator.clipboard.read())if(i.types.includes('text/html'))h=await(await i.getType('text/html')).text();
+  put(h,await navigator.clipboard.readText().catch(()=>''))}catch{toast('Clipboard access denied. Press Ctrl+V instead.')}};
+ed.addEventListener('paste',e=>{const c=e.clipboardData;if(!c)return;const h=c.getData('text/html'),t=c.getData('text/plain'),img=[...c.files].filter(f=>f.type.startsWith('image/'));
+  e.preventDefault();
+  if(img.length&&!h&&!t){img.forEach(f=>{const r=new FileReader();r.onload=()=>{document.execCommand('insertImage',false,r.result);changed()};r.readAsDataURL(f)});return}
+  const keep=pm==='keep'!==e.shiftKey;const old=pm;pm=keep?'keep':'plain';put(h,t);pm=old;changed()});
+function setPm(v){pm=v;L.setItem('np.paste',v);$('pm').textContent='Paste: '+(v==='keep'?'as is':'plain');$('pm').classList.toggle('on',v==='plain')}
+$('pm').onclick=()=>{setPm(pm==='keep'?'plain':'keep');toast(pm==='keep'?'Pasting keeps original formatting':'Pasting as plain text')};
 
-// Wiring
+// Formatting
+document.addEventListener('selectionchange',()=>{const s=getSelection();if(s.rangeCount&&ed.contains(s.anchorNode))rng=s.getRangeAt(0).cloneRange()});
+function exec(c,v){ed.focus();if(rng){const s=getSelection();s.removeAllRanges();s.addRange(rng)}document.execCommand(c,false,v);changed()}
+$('bar').onmousedown=e=>{if(e.target.closest('button'))e.preventDefault()};
+$('bar').onclick=e=>{const b=e.target.closest('[data-c]');if(b)exec(b.dataset.c)};
+$('blk').onchange=e=>{if(e.target.value)exec('formatBlock',e.target.value);e.target.value=''};
+const FONTS={sans:'Inter,system-ui,sans-serif',serif:'"Iowan Old Style",Georgia,serif',mono:'ui-monospace,Menlo,Consolas,monospace'};
+$('fnt').onchange=e=>{ed.style.fontFamily=FONTS[e.target.value];L.setItem('np.font',e.target.value)};
+$('fc').oninput=e=>exec('foreColor',e.target.value);$('hc').oninput=e=>exec('hiliteColor',e.target.value);
+$('lnk').onclick=()=>{let u=prompt('Link URL');if(!u)return;if(!/^(https?:|mailto:)/i.test(u))u='https://'+u;exec('createLink',u)};
+ed.onkeydown=e=>{if(e.key==='Tab'){e.preventDefault();const li=getSelection().anchorNode?.parentElement?.closest('li');li?document.execCommand(e.shiftKey?'outdent':'indent'):document.execCommand('insertText',false,'\u00a0\u00a0\u00a0\u00a0')}};
+
+// Zoom
+function setZoom(z){zoom=Math.min(3,Math.max(.5,Math.round(z*100)/100));ed.style.zoom=zoom;$('zv').textContent=Math.round(zoom*100)+'%';L.setItem('np.zoom',zoom)}
+$('zi').onclick=()=>setZoom(zoom+.1);$('zo').onclick=()=>setZoom(zoom-.1);$('zv').onclick=()=>setZoom(1);
+$('wrap').addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(zoom+(e.deltaY<0?.1:-.1))}},{passive:false});
+
+// Find & replace
+const fnd=()=>{const v=$('fi').value;if(v&&!window.find(v,false,false,true))toast('No matches')};
+$('fbtn').onclick=()=>{$('find').classList.toggle('on');$('fi').focus()};$('fx').onclick=()=>$('find').classList.remove('on');$('fn').onclick=fnd;
+$('fr').onclick=()=>{const s=getSelection();if(ed.contains(s.anchorNode)&&s.toString().toLowerCase()===$('fi').value.toLowerCase()&&s.toString()){document.execCommand('insertText',false,$('ri').value);changed()}fnd()};
+$('fa').onclick=()=>{const v=$('fi').value,r=$('ri').value;if(!v||r.toLowerCase().includes(v.toLowerCase()))return toast('Enter text to find (replacement must not contain it)');
+  let n=0;ed.focus();getSelection().collapse(ed,0);while(n<5000&&window.find(v,false,false,false)&&ed.contains(getSelection().anchorNode)){document.execCommand('insertText',false,r);n++}toast(n+' replaced');changed()};
+
+// Notes, files, layout
 ed.oninput=changed;$('title').oninput=changed;$('q').oninput=e=>{q=e.target.value.toLowerCase();list()};
 $('new').onclick=$('new2').onclick=()=>{add();$('side').classList.remove('open')};
 $('del').onclick=()=>{const n=cur();if(!n||!confirm('Delete "'+(n.title||'Untitled')+'"?'))return;n.deleted=true;n.html='';n.updated=Date.now();dirty.add(n.id);flush();const x=live()[0];x?open(x.id):list()};
+$('pin').onclick=()=>{const n=cur();if(!n)return;n.pinned=!n.pinned;n.updated=Date.now();dirty.add(n.id);flush();list()};
+$('foc').onclick=()=>document.body.classList.toggle('focus');$('prt').onclick=()=>print();
 $('menu').onclick=()=>$('side').classList.toggle('open');
 $('theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;L.setItem('np.theme',t)};
 $('open').onclick=()=>$('file').click();
-$('file').onchange=async e=>{for(const f of e.target.files){const s=await f.text(),h=/\.html?$/i.test(f.name)?clean(s):s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/\n/g,'<br>');add(f.name.replace(/\.[^.]+$/,''),h)}e.target.value=''};
+$('file').onchange=async e=>{for(const f of e.target.files){const s=await f.text();
+  if(/\.json$/i.test(f.name)){try{const d=JSON.parse(s);let c=0;for(const n of d.notes||[]){if(typeof n.html!=='string')continue;notes.unshift({id:uid(),title:String(n.title||'').slice(0,200),html:clean(n.html),updated:Date.now(),pinned:!!n.pinned});dirty.add(notes[0].id);c++}flush();list();toast(c+' notes restored')}catch{toast('Not a valid backup file')}}
+  else add(f.name.replace(/\.[^.]+$/,''),/\.html?$/i.test(f.name)?clean(s):plainHtml(s))}e.target.value=''};
+$('bak').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,notes:live()},null,1)],{type:'application/json'}));a.download='notepad-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 $('sync').onclick=()=>{$('k').value=key;$('dlg').showModal()};$('kclose').onclick=()=>$('dlg').close();
 $('gen').onclick=()=>{$('k').value=[...crypto.getRandomValues(new Uint8Array(20))].map(b=>b.toString(16).padStart(2,'0')).join('')};
 $('ksave').onclick=()=>{const v=$('k').value.trim();if(v.length<16)return toast('Sync key needs at least 16 characters');key=v;L.setItem('np.key',v);syncLabel();$('dlg').close();pull()};
 $('koff').onclick=()=>{key='';L.removeItem('np.key');syncLabel();$('dlg').close();status('Sync off. Notes stay in this browser.')};
-addEventListener('keydown',e=>{const m=e.ctrlKey||e.metaKey;if(m&&e.key==='s'){e.preventDefault();flush();toast('Saved')}if(e.altKey&&e.key==='n'){e.preventDefault();add()}});
+addEventListener('keydown',e=>{const m=e.ctrlKey||e.metaKey,k=e.key;
+  if(m&&k==='s'){e.preventDefault();flush();toast('Saved')}
+  else if(e.altKey&&k==='n'){e.preventDefault();add()}
+  else if(m&&k==='h'){e.preventDefault();$('find').classList.add('on');$('fi').focus()}
+  else if(m&&(k==='='||k==='+')&&ed.contains(document.activeElement)){e.preventDefault();setZoom(zoom+.1)}
+  else if(m&&k==='-'&&ed.contains(document.activeElement)){e.preventDefault();setZoom(zoom-.1)}
+  else if(m&&k==='0'&&ed.contains(document.activeElement)){e.preventDefault();setZoom(1)}
+  else if(k==='Escape'){document.body.classList.remove('focus');$('find').classList.remove('on')}});
 addEventListener('beforeunload',saveLocal);addEventListener('online',pull);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
 
-syncLabel();if(!live().length&&!key)add('Welcome','Paste, type, or drop text here. It saves automatically.');
+syncLabel();setPm(pm);setZoom(zoom);const f=L.getItem('np.font')||'sans';$('fnt').value=f;ed.style.fontFamily=FONTS[f];
+if(!live().length&&!key)add('Welcome','Type or paste anything here. It saves automatically.');
 const c=cur()||live()[0];c?open(c.id):list();status(key?'':'Saved in this browser');pull();
 </script>
 </body>

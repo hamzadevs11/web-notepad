@@ -32,6 +32,7 @@ module.exports = async (req, res) => {
         html: n.deleted ? '' : String(n.html || ''),
         updated: Number(n.updated) || Date.now(),
         deleted: !!n.deleted,
+        pinned: !!n.pinned,
       };
       if (note.html.length > MAX_NOTE_CHARS) return res.status(413).json({ error: 'note_too_large' });
       if (!(await redis.hexists(ns, note.id)) && (await redis.hlen(ns)) >= MAX_NOTES)
