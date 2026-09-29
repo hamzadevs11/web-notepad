@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Notepad</title>
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
+<script>document.documentElement.dataset.theme=localStorage.getItem('np.theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')</script>
+<style>
+:root{--bg:#eef1f4;--panel:#fff;--tx:#16202a;--mut:#64707d;--bd:#dde2e8;--ac:#0f766e;--acs:#dff3f0}
+:root[data-theme=dark]{--bg:#0d1216;--panel:#151c22;--tx:#e6ebf0;--mut:#8a97a4;--bd:#25303a;--ac:#5eead4;--acs:#173a38}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{display:flex;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);padding-top:env(safe-area-inset-top,0)}
+button,input{font:inherit;color:inherit}
+button{background:none;border:1px solid var(--bd);border-radius:8px;padding:6px 11px;cursor:pointer}
+button:hover{background:var(--acs)}button.p{background:var(--ac);border-color:var(--ac);color:var(--panel);font-weight:600}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+aside{width:290px;background:var(--panel);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px;gap:10px;flex:none}
+aside h1{font-size:18px;margin:0}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+#q,#title,#k{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:8px;padding:8px 10px}
+#list{list-style:none;margin:0;padding:0;overflow:auto;flex:1}
+#list li{padding:9px 10px;border-radius:8px;cursor:pointer;border-left:3px solid transparent}
+#list li:hover{background:var(--bg)}#list li.on{background:var(--acs);border-left-color:var(--ac)}
+#list b,#list small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#list small,.mut{color:var(--mut)}
+main{flex:1;display:flex;flex-direction:column;min-width:0;padding:14px;gap:10px}
+#title{font-size:20px;font-weight:650;background:var(--panel)}
+.bar{display:flex;flex-wrap:wrap;gap:6px}
+#ed{flex:1;overflow:auto;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:22px clamp(16px,5vw,56px);font:17px/1.75 "Iowan Old Style",Georgia,serif;outline:none;word-wrap:break-word}
+#ed:empty:before{content:"Start typing, or paste anything here. Formatting is kept exactly as copied.";color:var(--mut)}
+#ed img{max-width:100%}#ed table{border-collapse:collapse}#ed td,#ed th{border:1px solid var(--bd);padding:4px 8px}
+footer{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+#empty{margin:auto;text-align:center}
+dialog{background:var(--panel);color:var(--tx);border:1px solid var(--bd);border-radius:12px;max-width:440px;width:92%}dialog::backdrop{background:#0008}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--panel);padding:8px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s}#toast.on{opacity:1}
+#menu{display:none}
+@media(max-width:760px){aside{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%);transition:transform .2s;width:84%;max-width:320px;padding-top:calc(14px + env(safe-area-inset-top,0))}aside.open{transform:none}#menu{display:inline-block}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="row"><h1>Notepad</h1><button id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button></div>
+  <div class="row"><button class="p" id="new">+ New note</button><button id="open" title="Open a .txt/.md/.html file">Open file</button></div>
+  <input id="q" type="search" placeholder="Search notes" aria-label="Search notes">
+  <ul id="list"></ul>
+  <button id="sync">Sync: off</button>
+  <input id="file" type="file" accept=".txt,.md,.html,.htm,text/*" hidden>
+</aside>
+<main>
+  <div class="row"><button id="menu" style="flex:none" aria-label="Notes">☰</button><input id="title" placeholder="Untitled" aria-label="Note title"></div>
+  <div class="bar" id="bar">
+    <button data-c="bold"><b>B</b></button><button data-c="italic"><i>I</i></button><button data-c="underline"><u>U</u></button>
+    <button data-c="insertUnorderedList">• List</button><button data-c="undo">Undo</button><button data-c="redo">Redo</button>
+    <button id="paste">Paste</button><button id="copy">Copy all</button>
+    <button id="dtxt" class="p">Download .txt</button><button id="dhtml">Download .html</button><button id="del">Delete</button>
+  </div>
+  <div id="ed" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Note"></div>
+  <div id="empty" hidden><p class="mut">No notes yet.</p><button class="p" id="new2">Create your first note</button></div>
+  <footer><span id="st" class="mut" role="status"></span><span id="wc" class="mut"></span></footer>
+</main>
+<dialog id="dlg">
+  <h3 style="margin-top:0">Cloud sync</h3>
+  <p class="mut">Notes are always saved in this browser. To keep them on other devices, use the same sync key there. Anyone with the key can read your notes, so keep it private.</p>
+  <input id="k" placeholder="Sync key (16+ characters)" autocomplete="off" spellcheck="false">
+  <div class="row" style="margin-top:12px"><button id="gen">Generate</button><button class="p" id="ksave">Save &amp; sync</button><button id="koff">Turn off</button></div>
+  <p class="mut" style="margin-bottom:0"><button id="kclose" style="border:0;padding:0;text-decoration:underline">Close</button></p>
+</dialog>
+<div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id),L=localStorage,ed=$('ed');
+const get=(k,d)=>{try{return JSON.parse(L.getItem(k))??d}catch{return d}};
+let notes=get('np.notes',[]),active=L.getItem('np.active'),key=L.getItem('np.key')||'',q='',dirty=new Set(),t1,t2;
+const uid=()=>crypto.randomUUID().replace(/-/g,'').slice(0,16);
+const cur=()=>notes.find(n=>n.id===active&&!n.deleted);
+const live=()=>notes.filter(n=>!n.deleted);
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)};
+const status=m=>$('st').textContent=m;
+const txt=h=>{const d=document.createElement('div');d.innerHTML=h;return d.innerText||d.textContent||''};
+
+// Sanitizer: strips scripts, event handlers and javascript: links from pasted/loaded HTML.
+function clean(html){const d=new DOMParser().parseFromString(html,'text/html');
+  d.querySelectorAll('script,style,iframe,object,embed,link,meta,form,base').forEach(e=>e.remove());
+  d.body.querySelectorAll('*').forEach(e=>[...e.attributes].forEach(a=>{
+    if(/^on/i.test(a.name)||(/^(href|src|xlink:href|action)$/i.test(a.name)&&/^\s*javascript:/i.test(a.value)))e.removeAttribute(a.name)}));
+  return d.body.innerHTML}
+
+function saveLocal(){try{L.setItem('np.notes',JSON.stringify(notes))}catch{toast('Browser storage is full. Download your notes.')}}
+function list(){const ul=$('list');ul.textContent='';
+  live().filter(n=>!q||(n.title+' '+txt(n.html)).toLowerCase().includes(q)).sort((a,b)=>b.updated-a.updated).forEach(n=>{
+    const li=document.createElement('li'),b=document.createElement('b'),s=document.createElement('small');
+    b.textContent=n.title||'Untitled';s.textContent=(txt(n.html).trim().slice(0,60))||'Empty note';
+    li.append(b,s);li.className=n.id===active?'on':'';li.onclick=()=>{open(n.id);$('side').classList.remove('open')};ul.append(li)});
+  const none=!live().length;$('empty').hidden=!none;['title','bar','ed'].forEach(i=>$(i).style.display=none?'none':'')}
+function count(){const t=ed.innerText.trim();$('wc').textContent=(t?t.split(/\s+/).length:0)+' words · '+t.length+' characters'}
+function open(id){flush();active=id;L.setItem('np.active',id);const n=cur();if(!n)return;
+  $('title').value=n.title;ed.innerHTML=clean(n.html);count();list()}
+function add(title='',html=''){const n={id:uid(),title,html,updated:Date.now()};notes.unshift(n);dirty.add(n.id);open(n.id);flush();$('title').focus()}
+function changed(){const n=cur();if(!n)return;n.title=$('title').value;n.html=ed.innerHTML;n.updated=Date.now();dirty.add(n.id);count();
+  status(key?'Saving…':'Saved in this browser');clearTimeout(t1);t1=setTimeout(()=>{saveLocal();list()},300);clearTimeout(t2);t2=setTimeout(pushDirty,1500)}
+function flush(){clearTimeout(t1);clearTimeout(t2);saveLocal();pushDirty()}
+
+// Backend sync (last write wins per note)
+async function api(method,body){const r=await fetch('/api/notes',{method,headers:{'content-type':'application/json','x-sync-key':key},body:body&&JSON.stringify(body)});
+  if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);return r.json()}
+async function push(n){if(!key)return;try{await api('PUT',{note:n});status('Synced')}catch(e){dirty.add(n.id);status(e.message==='storage_not_configured'?'Sync unavailable: storage not set up on server':'Offline. Will retry.')}}
+async function pushDirty(){const ids=[...dirty];dirty.clear();for(const id of ids){const n=notes.find(x=>x.id===id);if(n)await push(n)}}
+async function pull(){if(!key)return;status('Syncing…');
+  try{const {notes:remote}=await api('GET'),m=new Map(notes.map(n=>[n.id,n])),seen=new Set();
+    for(const r of remote){seen.add(r.id);const l=m.get(r.id);if(!l||r.updated>l.updated)m.set(r.id,r);else if(l.updated>r.updated)dirty.add(l.id)}
+    notes.forEach(n=>{if(!seen.has(n.id))dirty.add(n.id)});notes=[...m.values()];saveLocal();await pushDirty();
+    const c=cur()||live()[0];c?open(c.id):list();status('Synced')}
+  catch(e){status(e.message==='storage_not_configured'?'Sync unavailable: storage not set up on server':e.message==='invalid_sync_key'?'Invalid sync key':'Offline. Notes are saved in this browser.')}}
+const syncLabel=()=>$('sync').textContent=key?'Sync: on':'Sync: off';
+
+// Downloads / clipboard
+function download(ext){const n=cur();if(!n)return;const name=(n.title||'note').replace(/[\\/:*?"<>|]+/g,'').trim()||'note';
+  const body=ext==='txt'?ed.innerText:'<!doctype html><meta charset="utf-8"><title>'+name.replace(/[&<]/g,'')+'</title><body>'+ed.innerHTML;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:ext==='txt'?'text/plain':'text/html'}));a.download=name+'.'+ext;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Downloaded '+name+'.'+ext)}
+$('dtxt').onclick=()=>download('txt');$('dhtml').onclick=()=>download('html');
+$('copy').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([ed.innerHTML],{type:'text/html'}),'text/plain':new Blob([ed.innerText],{type:'text/plain'})})])}catch{try{await navigator.clipboard.writeText(ed.innerText)}catch{return toast('Copy blocked by the browser')}}toast('Copied')};
+$('paste').onclick=async()=>{ed.focus();try{for(const i of await navigator.clipboard.read()){if(i.types.includes('text/html')){document.execCommand('insertHTML',false,clean(await(await i.getType('text/html')).text()));return}}
+  document.execCommand('insertText',false,await navigator.clipboard.readText())}catch{toast('Clipboard access denied. Press Ctrl+V instead.')}};
+ed.addEventListener('paste',e=>{const h=e.clipboardData.getData('text/html');if(h&&!e.shiftKey){e.preventDefault();document.execCommand('insertHTML',false,clean(h))}}); // Ctrl+Shift+V = plain text
+$('bar').onclick=e=>{const c=e.target.closest('[data-c]');if(c){ed.focus();document.execCommand(c.dataset.c)}};
+
+// Wiring
+ed.oninput=changed;$('title').oninput=changed;$('q').oninput=e=>{q=e.target.value.toLowerCase();list()};
+$('new').onclick=$('new2').onclick=()=>{add();$('side').classList.remove('open')};
+$('del').onclick=()=>{const n=cur();if(!n||!confirm('Delete "'+(n.title||'Untitled')+'"?'))return;n.deleted=true;n.html='';n.updated=Date.now();dirty.add(n.id);flush();const x=live()[0];x?open(x.id):list()};
+$('menu').onclick=()=>$('side').classList.toggle('open');
+$('theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;L.setItem('np.theme',t)};
+$('open').onclick=()=>$('file').click();
+$('file').onchange=async e=>{for(const f of e.target.files){const s=await f.text(),h=/\.html?$/i.test(f.name)?clean(s):s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/\n/g,'<br>');add(f.name.replace(/\.[^.]+$/,''),h)}e.target.value=''};
+$('sync').onclick=()=>{$('k').value=key;$('dlg').showModal()};$('kclose').onclick=()=>$('dlg').close();
+$('gen').onclick=()=>{$('k').value=[...crypto.getRandomValues(new Uint8Array(20))].map(b=>b.toString(16).padStart(2,'0')).join('')};
+$('ksave').onclick=()=>{const v=$('k').value.trim();if(v.length<16)return toast('Sync key needs at least 16 characters');key=v;L.setItem('np.key',v);syncLabel();$('dlg').close();pull()};
+$('koff').onclick=()=>{key='';L.removeItem('np.key');syncLabel();$('dlg').close();status('Sync off. Notes stay in this browser.')};
+addEventListener('keydown',e=>{const m=e.ctrlKey||e.metaKey;if(m&&e.key==='s'){e.preventDefault();flush();toast('Saved')}if(e.altKey&&e.key==='n'){e.preventDefault();add()}});
+addEventListener('beforeunload',saveLocal);addEventListener('online',pull);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
+
+syncLabel();if(!live().length&&!key)add('Welcome','Paste, type, or drop text here. It saves automatically.');
+const c=cur()||live()[0];c?open(c.id):list();status(key?'':'Saved in this browser');pull();
+</script>
+</body>
+</html>
