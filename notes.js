@@ -38,8 +38,9 @@ module.exports = async (req, res) => {
           : undefined,
       };
       if (note.html.length > MAX_NOTE_CHARS || JSON.stringify(note.extra || {}).length > 600000) return res.status(413).json({ error: 'note_too_large' });
-      if (!(await redis.hexists(ns, note.id)) && (await redis.hlen(ns)) >= MAX_NOTES)
-        return res.status(429).json({ error: 'too_many_notes' });
+      const prev = await redis.hget(ns, note.id);
+      if (prev && Number(prev.updated) > note.updated) return res.status(200).json({ ok: true, stale: true });
+      if (!prev && (await redis.hlen(ns)) >= MAX_NOTES) return res.status(429).json({ error: 'too_many_notes' });
       await redis.hset(ns, { [note.id]: note });
       return res.status(200).json({ ok: true });
     }
