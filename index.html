@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Notepad</title>
-<meta name="theme-color" content="#3b5bdb">
+<meta name="theme-color" content="#3b5bdb"><link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Notepad">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
 <script>document.documentElement.dataset.theme=localStorage.getItem('np.theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')</script>
@@ -48,6 +49,8 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;padding:16px 20px 10p
 @media(pointer:coarse){button,.clr,select{min-height:44px}.ib{width:44px}input,select{font-size:16px}}
 @media(max-width:760px){.top{flex-wrap:wrap}#title{flex-basis:calc(100% - 60px);font-size:21px}.acts{flex-wrap:wrap}.menu{position:fixed;left:8px;right:8px;top:auto;bottom:calc(8px + env(safe-area-inset-bottom,0));min-width:0;z-index:30}#bar,#dbar{-webkit-mask-image:linear-gradient(to right,#000 90%,transparent);mask-image:linear-gradient(to right,#000 90%,transparent)}main{padding-bottom:calc(10px + env(safe-area-inset-bottom,0))}aside.open+#scrim{display:block;position:fixed;inset:0;background:#0006;z-index:4}}
 @supports(height:100dvh){html,body{height:100dvh}}
+[hidden]{display:none!important}
+#ibar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0));max-width:460px;margin:auto;display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:10px 12px;z-index:15}#ibar span{flex:1;font-size:13px;line-height:1.35}
 #ed:empty:before{content:"Type here, or paste from anywhere. Formatting is kept exactly as copied.";color:var(--mut)}
 #ed img{max-width:100%;height:auto}#ed table{border-collapse:collapse}#ed td,#ed th{border:1px solid var(--bd);padding:4px 8px}
 #ed blockquote{margin:1em 0;padding-left:16px;border-left:3px solid var(--ac);color:var(--mut)}#ed pre{background:var(--bg);padding:12px;border-radius:8px;overflow:auto}
@@ -72,7 +75,7 @@ aside,.bar,#dbar,#find,footer,#menu,.np{display:none!important}html,body{height:
   <input id="q" type="search" placeholder="Search notes" aria-label="Search notes">
   <ul id="list"></ul>
   <div class="row"><button class="o g" id="sync">Sync: off</button><button class="o g" id="open" title="Import .txt, .md, .html or a backup .json">Import</button></div>
-  <div class="row"><button class="o g" id="bak">Backup all</button></div>
+  <div class="row"><button class="o g" id="bak">Backup all</button><button class="o g" id="inst" hidden>Install app</button></div>
   <input id="file" type="file" accept=".txt,.md,.html,.htm,.json,text/*" hidden>
 </aside>
 <div id="scrim"></div>
@@ -110,11 +113,14 @@ aside,.bar,#dbar,#find,footer,#menu,.np{display:none!important}html,body{height:
 </main>
 <dialog id="dlg">
   <h3 style="margin-top:0">Cloud sync</h3>
-  <p class="mut">Notes are always saved in this browser. Use the same sync key on another device to see them there. Anyone with the key can read your notes, so keep it private.</p>
-  <input id="k" placeholder="Sync key (16+ characters)" autocomplete="off" spellcheck="false">
-  <div class="row" style="margin-top:12px"><button class="o g" id="gen">Generate</button><button class="p g" id="ksave">Save &amp; sync</button><button class="o g" id="koff">Turn off</button></div>
+  <p class="mut">Use the same key on every device. On your phone the easiest way is the sync link, so you never have to type the key.</p>
+  <input id="k" placeholder="Sync key (16+ letters or numbers)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <p class="mut" style="margin:8px 0 0">Key ID: <b id="kid">–</b> (must match on every device) · <span id="kst">Ready</span></p>
+  <div class="row" style="margin-top:12px"><button class="o g" id="gen">Generate</button><button class="p g" id="ksave">Save &amp; sync</button></div>
+  <div class="row" style="margin-top:8px"><button class="o g" id="klink" hidden>Share sync link</button><button class="o g" id="know">Sync now</button><button class="o g" id="koff">Turn off</button></div>
   <p style="margin-bottom:0"><button id="kclose">Close</button></p>
 </dialog>
+<div id="ibar" class="np" hidden><span>Install Notepad to open it like an app, even offline.</span><button class="p" id="ibi">Install</button><button id="ibn">Not now</button></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></symbol><symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/></symbol>
 <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3H7l3-3-1-6zM12 13v7"/></symbol><symbol id="i-focus" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
@@ -129,10 +135,10 @@ aside,.bar,#dbar,#find,footer,#menu,.np{display:none!important}html,body{height:
 const $=id=>document.getElementById(id),L=localStorage,ed=$('ed');
 const get=(k,d)=>{try{return JSON.parse(L.getItem(k))??d}catch{return d}};
 let notes=get('np.notes',[]),active=L.getItem('np.active'),key=L.getItem('np.key')||'',q='',dirty=new Set(),t1,t2,rng,pm=L.getItem('np.paste')||'keep',zoom=+(L.getItem('np.zoom')||1);
-const uid=()=>crypto.randomUUID().replace(/-/g,'').slice(0,16);
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('')).replace(/-/g,'').slice(0,16);
 const cur=()=>notes.find(n=>n.id===active&&!n.deleted),live=()=>notes.filter(n=>!n.deleted);
-const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)};
-const status=m=>$('st').textContent=m,esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const toast=(m,ms=2200)=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),ms)};
+const status=m=>{$('st').textContent=m;$('kst').textContent=m||'Ready'},esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const txt=h=>{const d=document.createElement('div');d.innerHTML=h;return d.innerText||d.textContent||''};
 
 // Sanitizer: removes scripts, event handlers and javascript: links; keeps all visual formatting.
@@ -161,20 +167,21 @@ function changed(){const n=cur();if(!n)return;delete n.w;n.title=$('title').valu
 function flush(){clearTimeout(t1);clearTimeout(t2);saveLocal();pushDirty()}
 
 // Backend sync (last write wins per note)
-async function api(method,body){const r=await fetch('/api/notes',{method,headers:{'content-type':'application/json','x-sync-key':key},body:body&&JSON.stringify(body)});
+const errMsg=e=>e.message==='storage_not_configured'?'Server storage is not set up (add Upstash Redis in Vercel, then redeploy)':e.message==='invalid_sync_key'?'Invalid sync key':/^(401|403)$/.test(e.message)?'Vercel is blocking this URL (Deployment Protection). Open your production domain instead.':'Cannot reach the server ('+e.message+'). Notes are safe on this device.';
+async function api(method,body){const r=await fetch('/api/notes',{method,cache:'no-store',headers:{'content-type':'application/json','x-sync-key':key},body:body&&JSON.stringify(body)});
   if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);return r.json()}
 async function push(n){if(!key||n.w)return;try{await api('PUT',{note:n});status('Synced')}catch(e){dirty.add(n.id);status(e.message==='storage_not_configured'?'Sync unavailable: storage not set up on server':'Offline. Will retry.')}}
 async function pushDirty(){const ids=[...dirty];dirty.clear();for(const id of ids){const n=notes.find(x=>x.id===id);if(n)await push(n)}}
 let pulling=false;
-async function pull(){if(!key||pulling)return;pulling=true;try{await pullInner()}finally{pulling=false}}
-async function pullInner(){status('Syncing…');
+async function pull(manual){if(!key||pulling)return;pulling=true;try{await pullInner(manual)}finally{pulling=false}}
+async function pullInner(manual){status('Syncing…');
   try{const {notes:remote}=await api('GET'),m=new Map(notes.map(n=>[n.id,n])),seen=new Set(),before=cur();
     for(const r of remote){seen.add(r.id);const l=m.get(r.id);if(!l||r.updated>l.updated){m.set(r.id,r);dirty.delete(r.id)}else if(l.updated>r.updated)dirty.add(l.id)}
     if(remote.some(r=>!r.deleted))for(const n of [...m.values()])if(n.w)m.delete(n.id); // untouched starter note is dropped once real notes arrive
     notes.forEach(n=>{if(!seen.has(n.id)&&m.has(n.id))dirty.add(n.id)});notes=[...m.values()];saveLocal();await pushDirty();
     const a=cur();if(a&&a===before)list();else{const c=a||live().sort((x,y)=>y.updated-x.updated)[0];c?open(c.id):list()}
-    status('Synced · '+live().length+' notes')}
-  catch(e){status(e.message==='storage_not_configured'?'Sync unavailable: storage not set up on server':e.message==='invalid_sync_key'?'Invalid sync key':'Offline. Notes are saved in this browser.')}}
+    status('Synced · '+live().length+' notes');if(manual){toast('Synced · '+live().length+' notes');if(innerWidth<=760&&live().length>1)$('side').classList.add('open')}}
+  catch(e){const m=errMsg(e);status(m);if(manual)toast(m,6000)}}
 const syncLabel=()=>$('sync').textContent=key?'Sync: on':'Sync: off';
 
 // Downloads, copy, paste
@@ -321,10 +328,16 @@ $('file').onchange=async e=>{for(const f of e.target.files){const s=await f.text
   if(/\.json$/i.test(f.name)){try{const d=JSON.parse(s);let c=0;for(const n of d.notes||[]){if(typeof n.html!=='string')continue;notes.unshift({id:uid(),title:String(n.title||'').slice(0,200),html:clean(n.html),updated:Date.now(),pinned:!!n.pinned,extra:n.extra&&typeof n.extra==='object'?n.extra:undefined});dirty.add(notes[0].id);c++}flush();list();toast(c+' notes restored')}catch{toast('Not a valid backup file')}}
   else add(f.name.replace(/\.[^.]+$/,''),/\.html?$/i.test(f.name)?clean(s):plainHtml(s))}e.target.value=''};
 $('bak').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,notes:live()},null,1)],{type:'application/json'}));a.download='notepad-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-$('sync').onclick=()=>{$('k').value=key;$('dlg').showModal()};$('kclose').onclick=()=>$('dlg').close();
+const closeDlg=()=>{const d=$('dlg');d.close?d.close():d.removeAttribute('open')};
+$('sync').onclick=()=>{const d=$('dlg');$('k').value=key;$('klink').hidden=!key;kid();d.showModal?d.showModal():d.setAttribute('open','')};$('kclose').onclick=()=>closeDlg();
 $('gen').onclick=()=>{$('k').value=[...crypto.getRandomValues(new Uint8Array(20))].map(b=>b.toString(16).padStart(2,'0')).join('')};
-$('ksave').onclick=()=>{const v=$('k').value.trim();if(v.length<16)return toast('Sync key needs at least 16 characters');key=v;L.setItem('np.key',v);syncLabel();$('dlg').close();pull()};
-$('koff').onclick=()=>{key='';L.removeItem('np.key');syncLabel();$('dlg').close();status('Sync off. Notes stay in this browser.')};
+const normKey=v=>String(v).replace(/[\s\u200b-\u200d\ufeff]/g,'').toLowerCase();
+function setKey(v,manual){v=normKey(v);if(!/^[a-z0-9_-]{16,128}$/.test(v)){toast('Sync key must be 16+ letters or numbers, without spaces or symbols',4000);return false}key=v;L.setItem('np.key',v);syncLabel();kid();pull(manual);return true}
+async function kid(){const e=$('kid');if(!key||!crypto.subtle){e.textContent='–';return}const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key));e.textContent=[...new Uint8Array(b).slice(0,3)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+$('ksave').onclick=()=>{if(setKey($('k').value,true)){closeDlg();$('klink').hidden=false}};
+$('know').onclick=()=>key?pull(true):toast('Save a sync key first');
+$('klink').onclick=()=>{const u=location.origin+'/#sync='+key;if(navigator.share)navigator.share({title:'Notepad sync',url:u}).catch(()=>{});else navigator.clipboard.writeText(u).then(()=>toast('Sync link copied. Open it on your other device.'),()=>prompt('Copy this link',u))};
+$('koff').onclick=()=>{key='';kid();L.removeItem('np.key');syncLabel();closeDlg();status('Sync off. Notes stay in this browser.')};
 addEventListener('keydown',e=>{const m=e.ctrlKey||e.metaKey,k=e.key;
   if(m&&k==='s'){e.preventDefault();flush();toast('Saved')}
   else if(e.altKey&&k==='n'){e.preventDefault();add()}
@@ -335,7 +348,7 @@ addEventListener('keydown',e=>{const m=e.ctrlKey||e.metaKey,k=e.key;
   else if(m&&(k.toLowerCase()==='z'||k.toLowerCase()==='y')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();(k.toLowerCase()==='y'||e.shiftKey)?redo():undo()}
   else if((k==='Delete'||k==='Backspace')&&sel!=null&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)&&!ed.contains(document.activeElement)){e.preventDefault();delSel()}
   else if(k==='Escape'){closeMenus();document.body.classList.remove('focus');$('find').classList.remove('on')}});
-addEventListener('beforeunload',saveLocal);addEventListener('online',pull);setInterval(()=>{if(key&&!document.hidden)pull()},45000);
+addEventListener('beforeunload',saveLocal);addEventListener('online',()=>pull());setInterval(()=>{if(key&&!document.hidden)pull()},45000);
 document.addEventListener('visibilitychange',()=>{document.hidden?flush():pull()});
 
 // Toolbar UX: icons, live formatting state, menus, keyboard navigation
@@ -354,7 +367,21 @@ $('bar').addEventListener('keydown',e=>{if((e.key!=='ArrowRight'&&e.key!=='Arrow
 $('exf').onclick=()=>document.body.classList.remove('focus');$('scrim').onclick=()=>$('side').classList.remove('open');addEventListener('resize',()=>setZoom());
 syncLabel();setPm(pm);setZoom(eff());const f=L.getItem('np.font')||'sans';$('fnt').value=f;ed.style.fontFamily=FONTS[f];
 if(!live().length&&!key){add('Welcome','Type or paste anything here. It saves automatically.');cur().w=1;saveLocal()}
-const c=cur()||live()[0];c?open(c.id):list();status(key?'':'Saved in this browser');pull();
+const c=cur()||live()[0];c?open(c.id):list();status(key?'':'Saved in this browser');kid();
+if(/[?&]new=1/.test(location.search)){history.replaceState(null,'',location.pathname);add()}
+const hm=location.hash.match(/^#sync=([^&]+)/);
+if(hm){history.replaceState(null,'',location.pathname+location.search);let nk='';try{nk=normKey(decodeURIComponent(hm[1]))}catch{}if(!key||key===nk||confirm('Use the sync key from this link? Notes on this device will be merged with your synced notes.'))setKey(nk,true)}else pull();
+
+// Install as an app (PWA)
+let ip=null;const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function showInstall(){if(standalone())return;$('inst').hidden=false;const t=+L.getItem('np.noinst')||0;if(Date.now()-t>6048e5)$('ibar').hidden=false}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;showInstall()});
+addEventListener('appinstalled',()=>{ip=null;$('inst').hidden=$('ibar').hidden=true;toast('Notepad installed')});
+if(ios&&!standalone())showInstall();
+async function install(){if(ip){ip.prompt();await ip.userChoice;ip=null;$('ibar').hidden=$('inst').hidden=true}else toast('On iPhone or iPad: tap Share, then "Add to Home Screen"',7000)}
+$('inst').onclick=$('ibi').onclick=install;$('ibn').onclick=()=>{$('ibar').hidden=true;L.setItem('np.noinst',Date.now())};
+if('serviceWorker' in navigator&&isSecureContext)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
 </html>

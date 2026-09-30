@@ -18,3 +18,8 @@ through a serverless backend (Vercel Function + Upstash Redis).
 
 ## Local test
 `npm i -g vercel && npm i && vercel dev`
+
+## Phone / install
+- Sync on a phone: on your computer open Cloud sync > "Share sync link", open that link on the phone (no typing). Check that the Key ID matches.
+- Install as an app: Chrome/Edge/Android show an Install banner (or the address-bar icon); on iPhone use Share > Add to Home Screen.
+- If the phone says "Vercel is blocking this URL", open your production domain, not a preview URL, or turn off Deployment Protection.
