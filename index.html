@@ -117,7 +117,7 @@ aside,.bar,#dbar,#find,footer,#menu,.np{display:none!important}html,body{height:
   <input id="k" placeholder="Sync key (16+ letters or numbers)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
   <p class="mut" style="margin:8px 0 0">Key ID: <b id="kid">–</b> (must match on every device) · <span id="kst">Ready</span></p>
   <div class="row" style="margin-top:12px"><button class="o g" id="gen">Generate</button><button class="p g" id="ksave">Save &amp; sync</button></div>
-  <div class="row" style="margin-top:8px"><button class="o g" id="klink" hidden>Share sync link</button><button class="o g" id="know">Sync now</button><button class="o g" id="koff">Turn off</button></div>
+  <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="o g" id="klink" hidden>Share sync link</button><button class="o g" id="ktest">Test connection</button><button class="o g" id="know">Sync now</button><button class="o g" id="koff">Turn off</button></div>
   <p style="margin-bottom:0"><button id="kclose">Close</button></p>
 </dialog>
 <div id="ibar" class="np" hidden><span>Install Notepad to open it like an app, even offline.</span><button class="p" id="ibi">Install</button><button id="ibn">Not now</button></div>
@@ -167,20 +167,23 @@ function changed(){const n=cur();if(!n)return;delete n.w;n.title=$('title').valu
 function flush(){clearTimeout(t1);clearTimeout(t2);saveLocal();pushDirty()}
 
 // Backend sync (last write wins per note)
-const errMsg=e=>e.message==='storage_not_configured'?'Server storage is not set up (add Upstash Redis in Vercel, then redeploy)':e.message==='invalid_sync_key'?'Invalid sync key':/^(401|403)$/.test(e.message)?'Vercel is blocking this URL (Deployment Protection). Open your production domain instead.':'Cannot reach the server ('+e.message+'). Notes are safe on this device.';
-async function api(method,body){const r=await fetch('/api/notes',{method,cache:'no-store',headers:{'content-type':'application/json','x-sync-key':key},body:body&&JSON.stringify(body)});
-  if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);return r.json()}
-async function push(n){if(!key||n.w)return;try{await api('PUT',{note:n});status('Synced')}catch(e){dirty.add(n.id);status(e.message==='storage_not_configured'?'Sync unavailable: storage not set up on server':'Offline. Will retry.')}}
+const errMsg=e=>{const m=e.message,s=e.status;return m==='storage_not_configured'?'Server storage is not set up. In Vercel add Upstash Redis to this project, then redeploy.':m==='invalid_sync_key'?'Invalid sync key':m==='note_too_large'?'One note is too large to sync (big images). Remove large images from it.':m==='too_many_notes'?'Too many notes (limit 500).':m==='server_error'?'Server or database error'+(e.detail?': '+e.detail:'')+'.':(s===401||s===403)?'Vercel is blocking this URL (Deployment Protection). Open your production domain.':s===404?'The sync function (/api/notes) was not found on this site. Deploy the whole project including the api folder.':s>=500?'Server error '+s+'. Try again in a minute.':e instanceof TypeError?'No connection to the server. Check internet, VPN or an ad-blocker.':'Sync problem ('+m+').'};
+async function api(method,body,qs=''){const r=await fetch('/api/notes'+qs,{method,cache:'no-store',headers:{'content-type':'application/json','x-sync-key':key},body:body&&JSON.stringify(body)});
+  if(!r.ok){const j=await r.json().catch(()=>({}));throw Object.assign(new Error(j.error||r.status),{status:r.status,detail:j.detail})}return r.json()}
+async function push(n){if(!key||n.w)return;try{await api('PUT',{note:n});status('Synced')}catch(e){if(!['note_too_large','bad_note','too_many_notes'].includes(e.message))dirty.add(n.id);status(errMsg(e))}}
 async function pushDirty(){const ids=[...dirty];dirty.clear();for(const id of ids){const n=notes.find(x=>x.id===id);if(n)await push(n)}}
 let pulling=false;
 async function pull(manual){if(!key||pulling)return;pulling=true;try{await pullInner(manual)}finally{pulling=false}}
 async function pullInner(manual){status('Syncing…');
-  try{const {notes:remote}=await api('GET'),m=new Map(notes.map(n=>[n.id,n])),seen=new Set(),before=cur();
-    for(const r of remote){seen.add(r.id);const l=m.get(r.id);if(!l||r.updated>l.updated){m.set(r.id,r);dirty.delete(r.id)}else if(l.updated>r.updated)dirty.add(l.id)}
-    if(remote.some(r=>!r.deleted))for(const n of [...m.values()])if(n.w)m.delete(n.id); // untouched starter note is dropped once real notes arrive
+  try{const {notes:meta}=await api('GET',null,'?meta=1'),m=new Map(notes.map(n=>[n.id,n])),seen=new Set(meta.map(r=>r.id)),before=cur(),remote=[];let skipped=0;
+    const need=meta.filter(r=>{const l=m.get(r.id);return !l||r.updated>l.updated}),tomb=r=>({id:r.id,title:r.title||'',html:'',updated:r.updated,deleted:true});
+    for(let i=0;i<need.length;i+=4)await Promise.all(need.slice(i,i+4).map(async r=>{try{remote.push(r.deleted?tomb(r):(await api('GET',null,'?id='+encodeURIComponent(r.id))).note)}catch{skipped++}}));
+    for(const r of remote){const l=m.get(r.id);if(!l||r.updated>l.updated){m.set(r.id,r);dirty.delete(r.id)}}
+    for(const r of meta){const l=m.get(r.id);if(l&&l.updated>r.updated)dirty.add(l.id)}
+    if(meta.some(r=>!r.deleted))for(const n of [...m.values()])if(n.w)m.delete(n.id); // untouched starter note is dropped once real notes arrive
     notes.forEach(n=>{if(!seen.has(n.id)&&m.has(n.id))dirty.add(n.id)});notes=[...m.values()];saveLocal();await pushDirty();
     const a=cur();if(a&&a===before)list();else{const c=a||live().sort((x,y)=>y.updated-x.updated)[0];c?open(c.id):list()}
-    status('Synced · '+live().length+' notes');if(manual){toast('Synced · '+live().length+' notes');if(innerWidth<=760&&live().length>1)$('side').classList.add('open')}}
+    const msg='Synced · '+live().length+' notes'+(skipped?' ('+skipped+' failed to download, will retry)':'');status(msg);if(manual){toast(msg);if(innerWidth<=760&&live().length>1)$('side').classList.add('open')}}
   catch(e){const m=errMsg(e);status(m);if(manual)toast(m,6000)}}
 const syncLabel=()=>$('sync').textContent=key?'Sync: on':'Sync: off';
 
@@ -335,6 +338,14 @@ const normKey=v=>String(v).replace(/[\s\u200b-\u200d\ufeff]/g,'').toLowerCase();
 function setKey(v,manual){v=normKey(v);if(!/^[a-z0-9_-]{16,128}$/.test(v)){toast('Sync key must be 16+ letters or numbers, without spaces or symbols',4000);return false}key=v;L.setItem('np.key',v);syncLabel();kid();pull(manual);return true}
 async function kid(){const e=$('kid');if(!key||!crypto.subtle){e.textContent='–';return}const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key));e.textContent=[...new Uint8Array(b).slice(0,3)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 $('ksave').onclick=()=>{if(setKey($('k').value,true)){closeDlg();$('klink').hidden=false}};
+async function testConn(){const s=m=>{status(m);toast(m,7000)};
+  try{const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok)return s(errMsg({message:String(r.status),status:r.status}));
+    const j=await r.json();if(j.storage!=='configured')return s(errMsg({message:'storage_not_configured'}));
+    if(j.redis==='error')return s('Database error: '+(j.detail||'unknown')+'. Check the Upstash variables in Vercel.');
+    if(!key)return s('Server and database are OK. Now save a sync key.');
+    await api('GET',null,'?meta=1');s('All OK: server, database and sync key work.')}
+  catch(e){s(errMsg(e))}}
+$('ktest').onclick=testConn;
 $('know').onclick=()=>key?pull(true):toast('Save a sync key first');
 $('klink').onclick=()=>{const u=location.origin+'/#sync='+key;if(navigator.share)navigator.share({title:'Notepad sync',url:u}).catch(()=>{});else navigator.clipboard.writeText(u).then(()=>toast('Sync link copied. Open it on your other device.'),()=>prompt('Copy this link',u))};
 $('koff').onclick=()=>{key='';kid();L.removeItem('np.key');syncLabel();closeDlg();status('Sync off. Notes stay in this browser.')};
@@ -348,7 +359,7 @@ addEventListener('keydown',e=>{const m=e.ctrlKey||e.metaKey,k=e.key;
   else if(m&&(k.toLowerCase()==='z'||k.toLowerCase()==='y')&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();(k.toLowerCase()==='y'||e.shiftKey)?redo():undo()}
   else if((k==='Delete'||k==='Backspace')&&sel!=null&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)&&!ed.contains(document.activeElement)){e.preventDefault();delSel()}
   else if(k==='Escape'){closeMenus();document.body.classList.remove('focus');$('find').classList.remove('on')}});
-addEventListener('beforeunload',saveLocal);addEventListener('online',()=>pull());setInterval(()=>{if(key&&!document.hidden)pull()},45000);
+addEventListener('beforeunload',saveLocal);addEventListener('online',()=>pull());setInterval(()=>{if(key&&!document.hidden)pull()},60000);
 document.addEventListener('visibilitychange',()=>{document.hidden?flush():pull()});
 
 // Toolbar UX: icons, live formatting state, menus, keyboard navigation

@@ -23,3 +23,6 @@ through a serverless backend (Vercel Function + Upstash Redis).
 - Sync on a phone: on your computer open Cloud sync > "Share sync link", open that link on the phone (no typing). Check that the Key ID matches.
 - Install as an app: Chrome/Edge/Android show an Install banner (or the address-bar icon); on iPhone use Share > Add to Home Screen.
 - If the phone says "Vercel is blocking this URL", open your production domain, not a preview URL, or turn off Deployment Protection.
+
+## If sync says "cannot reach server"
+Open Cloud sync > **Test connection**. It tells you exactly what is wrong (no internet, API not deployed, Upstash not connected, database error, or Vercel Deployment Protection). You can also open `https://YOUR-SITE/api/health` in the phone browser: it should show `"storage":"configured","redis":"ok"`.

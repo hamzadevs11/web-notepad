@@ -7,7 +7,7 @@ const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const redis = url && token ? new Redis({ url, token }) : null;
 
-const MAX_NOTE_CHARS = 500000;
+const MAX_NOTE_CHARS = 3000000;
 const MAX_NOTES = 500;
 
 module.exports = async (req, res) => {
@@ -20,8 +20,16 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'GET') {
-      const all = (await redis.hgetall(ns)) || {};
-      return res.status(200).json({ notes: Object.values(all) });
+      const id = req.query && req.query.id;
+      if (id) {
+        const note = await redis.hget(ns, String(id));
+        return note ? res.status(200).json({ note }) : res.status(404).json({ error: 'not_found' });
+      }
+      const list = Object.values((await redis.hgetall(ns)) || {});
+      // meta=1: tiny index (no note bodies) so the response can never exceed Vercel's 4.5 MB limit
+      if (req.query && req.query.meta)
+        return res.status(200).json({ notes: list.map(n => ({ id: n.id, title: n.title, updated: n.updated, deleted: !!n.deleted, pinned: !!n.pinned })) });
+      return res.status(200).json({ notes: list });
     }
     if (req.method === 'PUT') {
       const n = req.body && req.body.note;
@@ -37,7 +45,7 @@ module.exports = async (req, res) => {
           ? { page: String(n.extra.page || 'free').slice(0, 12), items: Array.isArray(n.extra.items) ? n.extra.items.slice(0, 2000) : [] }
           : undefined,
       };
-      if (note.html.length > MAX_NOTE_CHARS || JSON.stringify(note.extra || {}).length > 600000) return res.status(413).json({ error: 'note_too_large' });
+      if (note.html.length > MAX_NOTE_CHARS || JSON.stringify(note.extra || {}).length > 500000) return res.status(413).json({ error: 'note_too_large' });
       const prev = await redis.hget(ns, note.id);
       if (prev && Number(prev.updated) > note.updated) return res.status(200).json({ ok: true, stale: true });
       if (!prev && (await redis.hlen(ns)) >= MAX_NOTES) return res.status(429).json({ error: 'too_many_notes' });
@@ -47,6 +55,6 @@ module.exports = async (req, res) => {
     res.setHeader('Allow', 'GET, PUT');
     return res.status(405).json({ error: 'method_not_allowed' });
   } catch (e) {
-    return res.status(500).json({ error: 'server_error' });
+    return res.status(500).json({ error: 'server_error', detail: String((e && e.message) || e).slice(0, 160) });
   }
 };
